@@ -1,0 +1,46 @@
+Amazon Linux 2 Netskope Client Install:
+
+Uninstall existing installation (to cleanup old install):
+sudo /opt/netskope/stagent/uninstall.sh
+
+Make sure webkitgtk4 is installed:
+sudo yum install webkitgtk4
+
+Download R101 Client:
+https://drive.google.com/file/d/1CT9CMOxykDzUleyak7BzIKxFHzuHTn1Z/view?usp=share_link
+
+Login to the netskope tenant, and navigate to Settings -> Security Cloud Platform -> Users
+Locate your user name, and click "..." on the right hand side.
+Select "Export User Key"
+Rename the downloaded file to nsbranding.json
+
+Run the installer:
+sudo sh ./STAgent-R101.run
+Run the netskope client taskbar UI from: Start -> Other -> Netskope
+--- Disregard the IDP provisioning popup ---
+
+Copy nsbranding user file downloaded from the tenant to installation folder:
+sudo cp "./nsbranding.json" /opt/netskope/stagent/nsbranding.json
+
+Download PEM file: https://drive.google.com/file/d/191KGowE6YB_dBDB_oHh51VvMcLZWi1cg/view?usp=share_link
+and place it into /etc/ssl/certs
+
+Reboot:
+sudo reboot 
+
+Copy netskope tenant SSL CA Certs to Amazon Linux 2 location:
+sudo cp /opt/netskope/stagent/data/*.pem /etc/pki/ca-trust/source/anchors/
+
+Workaround installer CA Certs location:
+sudo ln -s /etc/pki/ca-trust/source/anchors/ /usr/loca/share/ca-certificates 
+
+Rename netskope CA Certs from "pem" to "crt":
+cd /usr/local/share/ca-certificates
+find . -depth -name "*.pem" -exec sh -c 'f="{}"; mv -- "$f" "${f%.pem}.crt"' \;
+
+
+Make sure netskope main service is running:
+sudo systemctl status stagentd.service
+
+Run netskope tunnel process:
+sudo /opt/netskope/stagent/stAgentApp &&
